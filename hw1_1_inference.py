@@ -1,8 +1,7 @@
-# from hw1_1_utils import hw1_1_dataset, transform
 from torch.utils.data import DataLoader, Dataset
 import os
 import torch
-import imageio
+import imageio.v2 as imageio
 import torch.nn as nn
 import csv
 from torchvision import models, transforms
@@ -87,34 +86,8 @@ with open(output_dir, 'w') as outfile:
     writer.writerow(['filename', 'label'])
     with torch.no_grad():
         for i, img in enumerate(loader):
-            img.to(device)
+            img = img.to(device)
             scores = model(img)
             _, predictions = scores.max(1)  # value, index
 
             writer.writerow([test_dataset.getimagetitle(i), int(predictions)])
-
-# finish = time.time()
-# print(f'took {(finish-start)/60} min')
-
-
-# # check acc
-# num_correct = 0
-# num_samples = 0
-# test_dataset = hw1_1_dataset(
-#     input_dir, 'valid', transform=transform(image_size=224)['valid'])
-# dataloader = DataLoader(
-#     dataset=test_dataset, batch_size=8, shuffle=False)
-
-# with torch.no_grad():
-#     for x, y in dataloader:
-#         x = x.to(device)
-#         y = y.to(device)
-
-#         scores = model(x)
-#         _, predictions = scores.max(1)  # value, index
-
-#         num_correct += (predictions == y).sum()
-#         num_samples += predictions.size(0)
-
-#     print(
-#         f'Got {num_correct}/{num_samples}, with accuracy {float(num_correct)/float(num_samples):.2f}')

@@ -6,14 +6,14 @@ from torch.utils.data import Dataset
 import sys
 from torchvision.models import vgg16, VGG16_Weights
 import os
-import imageio
+import imageio.v2 as imageio
 import numpy as np
 # from mean_iou_evaluate import read_masks, mean_iou_score
 # import time
 
 # start = time.time()
 # input_dir = 'hw1_data/p2_data/validation'
-# output_dir = 'hw1_2_outputfile'
+# output_dir = './'
 input_dir = sys.argv[1]
 output_dir = sys.argv[2]
 model_dir = './vgg16_fcn8.pt'
@@ -93,15 +93,18 @@ class hw1_2_test_dataset(Dataset):
         return len(self.image_list)
 
     def __getitem__(self, idx):
-        index = '{0:04}'.format(idx)
-        img_path = index + '.jpg'
+        # index = '{0:04}'.format(idx)
+        # img_path = index + '.jpg'
+        image_name = self.image_list[idx].split('.')[0]
+        # image = imageio.imread(os.path.join(self.rootdir, img_path))
+        image = imageio.imread(os.path.join(
+            self.rootdir, self.image_list[idx]))
 
-        image = imageio.imread(os.path.join(self.rootdir, img_path))
         image = transforms.ToTensor()(image)
         image = transforms.Normalize(
             mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))(image)
 
-        return image
+        return image, image_name
 
 
 def label2mask(pred):
@@ -133,19 +136,20 @@ loader = DataLoader(dataset=test_dataset, batch_size=8, shuffle=False)
 # output result predict masks
 with torch.no_grad():
     image_count = 0
-    for batch_index, img in enumerate(loader):
-        img.to(device)
+    for batch_index, (img, image_name) in enumerate(loader):
+        img = img.to(device)
 
         pred = model(img)
+
         _, predicted = torch.max(pred.data, 1)
         predicted = predicted.detach().cpu().numpy()
 
         for i in range(len(predicted)):
             pred_mask = label2mask(predicted[i, :, :])
-            image_num = "%04d" % image_count
             image_count += 1
             imageio.imsave(os.path.join(
-                output_dir, image_num+'.png'), pred_mask)
+                output_dir, image_name[i]+'.png'), pred_mask)
+
 
 # finish = time.time()
 
